@@ -1,6 +1,7 @@
 const Ticket = require('../model/Ticket')
 const { serverError, resourceError } = require('../util/error')
 const { networkInterfaces } = require('os');
+var moment = require('moment');
 
 module.exports = {
 
@@ -26,69 +27,78 @@ module.exports = {
 
         let userId = req.body.userId
         let date = "UTC time " + date_obj
-        let deviceId = results
+        ///let deviceId = results
+        let deviceId = req.body.deviceId
         let queryText = req.body.queryText
 
-        let u = userId;
 
-        // Ticket.find({}).toArray(function (err, result) {
-        //     if (err) throw err;
-        //     console.log("&&&&&&&&&&&&&&&&&&&&&&&&&&&:", result);
-        // });
-        // const ticket = Ticket.find({ where: { userId: userId } })
-        //     .then(users => {
+        var deviceReqstList = [];
 
-        //         console.log("*************+++++**********", users[0])
-        //     })
-        //     .catch(error => serverError(res, error))
-        // console.log(ticket)
+        var dateSort = { date: -1 }
 
-
-        const ticket = Ticket.find()
+        Ticket.find().sort(dateSort)
             .then(users => {
-                console.log("^^^^^^^^^^^^^^^^^^^^^^^^^^", userId)
-                console.log("_______________________________", users._id)
-                users.map(u => {
-                    console.log("uuuuuuuuuuu", u._id)
-                })
                 users.forEach(u => {
-                    if(u.userId == userId)
-                    console.log("!!!!!!!!!!!!!!!!!!!!!!!!", u.userId)
+                    if (u.userId == userId) {
+                        deviceReqstList.push(u.date)
+                        ///console.log("++++", deviceReqstList)
+                    }
                 })
-                if (users)
-                    console.log("*************+++++**********")
+
+                ///console.log("++++", deviceReqstList[0])
+                var a = deviceReqstList[0]
+
+                var then = moment(a, "YYYY-MM-DD'T'HH:mm:ss:SSSZ")
+                var now = date
+
+                // var diff = moment.duration(then.diff(now));
+                // if (diff < 0) {
+                //     diff = Math.abs(diff);
+                // }
+                // var d = moment.utc(diff).format("HH:mm:ss:SSS");
+                // console.log("Difference: " + d);
+
+
+                var difff = moment.duration(moment(now).diff(moment(then)));
+                // var days = parseInt(difff.asDays());
+                var minutes = parseInt(difff.asMinutes());
+                ///console.log("Minutes::::::", minutes);
+
+                Ticket.findOne({ deviceId })
+                    .then(user => {
+                        var us = user
+                        /// console.log("$$$$$$$$$$$$$$$$", us)
+                        if (user && (minutes < 30)) {
+                            ///console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!", user.deviceId, minutes)
+                            return resourceError(res, 'You have already placed a support ticket. Please wait at least one hour before sending another request')
+                        } else {
+                            let ticket = new Ticket({
+                                userId,
+                                date,
+                                deviceId,
+                                queryText
+                            })
+                            //res.json(ticket)
+                            ticket.save()
+                                .then(ticket => {
+                                    res.status(200).json({
+                                        message: "Successfull",
+                                        ticket
+                                    })
+                                })
+                                .catch(err => {
+                                    console.log(err);
+                                    res.status(500).json({
+                                        message: "Error"
+                                    })
+                                })
+                        }
+                    })
+                    .catch(error => serverError(res, error))
             })
             .catch(error => serverError(res, error))
 
-        Ticket.findOne({ deviceId })
-            .then(user => {
-                var us = user
-                //console.log("++++++++", us)
-                if (user) {
-                    return resourceError(res, 'You have already placed a support ticket. Please wait at least one hour before sending another request')
-                } else {
-                    let ticket = new Ticket({
-                        userId,
-                        date,
-                        deviceId,
-                        queryText
-                    })
-                    res.json(ticket)
-                    ticket.save()
-                        .then(ticket => {
-                            res.status(200).json({
-                                message: "Successfull",
-                                ticket
-                            })
-                        })
-                        .catch(err => {
-                            console.log(err);
-                            res.status(500).json({
-                                message: "Error"
-                            })
-                        })
-                }
-            })
-            .catch(error => serverError(res, error))
+
+
     }
 }
