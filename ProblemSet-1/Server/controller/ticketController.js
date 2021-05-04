@@ -3,6 +3,7 @@ const { serverError, resourceError } = require('../util/error')
 const { networkInterfaces } = require('os');
 var moment = require('moment');
 
+
 module.exports = {
 
     createTicket(req, res) {
@@ -20,20 +21,15 @@ module.exports = {
                 }
             }
         }
-        console.log("********************************", results);
 
         let date_obj = new Date()
-        // console.log("UTC time " + date_obj)
 
         let userId = req.body.userId
         let date = "UTC time " + date_obj
-        ///let deviceId = results
-        let deviceId = req.body.deviceId
+        let deviceId = results
         let queryText = req.body.queryText
 
-
         var deviceReqstList = [];
-
         var dateSort = { date: -1 }
 
         Ticket.find().sort(dateSort)
@@ -41,35 +37,20 @@ module.exports = {
                 users.forEach(u => {
                     if (u.userId == userId) {
                         deviceReqstList.push(u.date)
-                        ///console.log("++++", deviceReqstList)
                     }
                 })
 
-                ///console.log("++++", deviceReqstList[0])
                 var a = deviceReqstList[0]
 
                 var then = moment(a, "YYYY-MM-DD'T'HH:mm:ss:SSSZ")
                 var now = date
 
-                // var diff = moment.duration(then.diff(now));
-                // if (diff < 0) {
-                //     diff = Math.abs(diff);
-                // }
-                // var d = moment.utc(diff).format("HH:mm:ss:SSS");
-                // console.log("Difference: " + d);
-
-
                 var difff = moment.duration(moment(now).diff(moment(then)));
-                // var days = parseInt(difff.asDays());
                 var minutes = parseInt(difff.asMinutes());
-                ///console.log("Minutes::::::", minutes);
 
                 Ticket.findOne({ deviceId })
                     .then(user => {
-                        var us = user
-                        /// console.log("$$$$$$$$$$$$$$$$", us)
                         if (user && (minutes < 30)) {
-                            ///console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!", user.deviceId, minutes)
                             return resourceError(res, 'You have already placed a support ticket. Please wait at least one hour before sending another request')
                         } else {
                             let ticket = new Ticket({
@@ -78,7 +59,6 @@ module.exports = {
                                 deviceId,
                                 queryText
                             })
-                            //res.json(ticket)
                             ticket.save()
                                 .then(ticket => {
                                     res.status(200).json({
@@ -97,8 +77,5 @@ module.exports = {
                     .catch(error => serverError(res, error))
             })
             .catch(error => serverError(res, error))
-
-
-
     }
 }

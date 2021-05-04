@@ -7,7 +7,7 @@ module.exports = {
     },
     resourceError(res, message) {
         //console.log(error)
-        res.status(400).json({
+        res.status(409).json({
             message
         })
     }

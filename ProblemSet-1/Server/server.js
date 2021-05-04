@@ -21,12 +21,20 @@ app.get('/', (req, res) => {
 
 const PORT = process.env.PORT || 4000
 
+// app.listen(PORT, () => {
+//     console.log(`Server is running on PORT: ${PORT}`)
+//     mongoose.connect('mongodb://localhost:27017/ticket',
+//         { useNewUrlParser: true, useUnifiedTopology: true },
+//         () => {
+//             console.log("Database Connected")
+//         }
+//     )
+// })
+
 app.listen(PORT, () => {
     console.log(`Server is running on PORT: ${PORT}`)
-    mongoose.connect('mongodb://localhost:27017/ticket',
-        { useNewUrlParser: true, useUnifiedTopology: true },
+    mongoose.connect('mongodb+srv://sohan-admin:sohan123@cluster0.cmynm.mongodb.net/ticket?retryWrites=true&w=majority',
         () => {
             console.log("Database Connected")
-        }
-    )
+        });
 })
