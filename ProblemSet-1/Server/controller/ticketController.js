@@ -1,47 +1,20 @@
 const Ticket = require('../model/Ticket')
 const { serverError, resourceError } = require('../util/error')
-var os = require('os');
-var requestIp = require('request-ip');
 const { networkInterfaces } = require('os');
 
-
 module.exports = {
+
     createTicket(req, res) {
-
-        // var clientIp = requestIp.getClientIp(req);
-        // console.log("**+++++++++++++++++++++**: ", clientIp.toString())
-
-
-        // var networkInterfaces = os.networkInterfaces()
-        // console.log("********************************", networkInterfaces);
-        // let nonLocalInterfaces = {};
-        // for (let inet in networkInterfaces) {
-        //     let addresses = networkInterfaces[inet];
-        //     for (let i = 0; i < addresses.length; i++) {
-        //         let address = addresses[i];
-        //         if (!address.internal) {
-        //             if (!nonLocalInterfaces[inet]) {
-        //                 nonLocalInterfaces[inet] = [];
-        //             }
-        //             nonLocalInterfaces[inet].push(address);
-        //         }
-        //     }
-        // }
-        // console.log("********************************", nonLocalInterfaces);
-
 
         const nets = networkInterfaces();
         var results = Object.create(null);
 
         for (const name of Object.keys(nets)) {
             for (const net of nets[name]) {
-                // skip over non-ipv4 and internal (i.e. 127.0.0.1) addresses
                 if (net.family === 'IPv4' && !net.internal) {
                     if (!results[name]) {
                         results[name] = [];
                     }
-                    // results[name].push(net.address);
-                    // console.log("********************************", net.address);
                     results = net.address
                 }
             }
@@ -50,15 +23,47 @@ module.exports = {
 
         let date_obj = new Date()
         // console.log("UTC time " + date_obj)
+
         let userId = req.body.userId
         let date = "UTC time " + date_obj
         let deviceId = results
         let queryText = req.body.queryText
 
+        let u = userId;
+
+        // Ticket.find({}).toArray(function (err, result) {
+        //     if (err) throw err;
+        //     console.log("&&&&&&&&&&&&&&&&&&&&&&&&&&&:", result);
+        // });
+        // const ticket = Ticket.find({ where: { userId: userId } })
+        //     .then(users => {
+
+        //         console.log("*************+++++**********", users[0])
+        //     })
+        //     .catch(error => serverError(res, error))
+        // console.log(ticket)
+
+
+        const ticket = Ticket.find()
+            .then(users => {
+                console.log("^^^^^^^^^^^^^^^^^^^^^^^^^^", userId)
+                console.log("_______________________________", users._id)
+                users.map(u => {
+                    console.log("uuuuuuuuuuu", u._id)
+                })
+                users.forEach(u => {
+                    if(u.userId == userId)
+                    console.log("!!!!!!!!!!!!!!!!!!!!!!!!", u.userId)
+                })
+                if (users)
+                    console.log("*************+++++**********")
+            })
+            .catch(error => serverError(res, error))
+
         Ticket.findOne({ deviceId })
             .then(user => {
                 var us = user
-                console.log("++++++++", us)
+                //console.log("++++++++", us)
                 if (user) {
                     return resourceError(res, 'You have already placed a support ticket. Please wait at least one hour before sending another request')
                 } else {
@@ -82,11 +87,8 @@ module.exports = {
                                 message: "Error"
                             })
                         })
-
                 }
             })
             .catch(error => serverError(res, error))
-
-
     }
 }
