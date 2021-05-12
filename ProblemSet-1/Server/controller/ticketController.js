@@ -48,7 +48,7 @@ module.exports = {
                 var difff = moment.duration(moment(now).diff(moment(then)));
                 var minutes = parseInt(difff.asMinutes());
 
-                Ticket.findOne({ deviceId })
+                Ticket.findOne({ userId })
                     .then(user => {
                         if (user && (minutes < 30)) {
                             return resourceError(res, 'You have already placed a support ticket. Please wait at least one hour before sending another request')
